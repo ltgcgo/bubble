@@ -1,10 +1,7 @@
-# Hyacinth
-💨 Build web projects with speed.
+# Bubble
+🫧 Lightweight WebFinger redirector.
 
-Documentation available at [kb.ltgc.cc](https://kb.ltgc.cc/hyacinth/).
+Documentation available at [kb.ltgc.cc](https://kb.ltgc.cc/bubble/).
 
 ## Key features
-* No BS configurations, just build.
-* Uses `esbuild` (**JS**, CSS), `tdewolff-minify` (**HTML**, JS) and `lightningcss` (**CSS**) under the hood with automatic fallbacks.
-* Runtime agnostic, no support towards any single runtime.
-* Directory structured.
+It has only one use: deflect WebFinger requests to other sources.
