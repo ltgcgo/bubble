@@ -2,8 +2,6 @@
 
 const cacheStaleMs = 60000;
 
-let emptyBuffer = new Uint8Array(0);
-
 let cachedMapLastUpdate = 0;
 let cachedJson;
 let getJson = async (key, env) => {
@@ -17,6 +15,9 @@ let getJson = async (key, env) => {
 		throw(new Error(`JSON not ready`));
 	};
 	return cachedJson[key];
+};
+let fetchJson = async (...args) => {
+	return await (await fetch(...args)).json();
 };
 
 let handleRequest = async function (request, env) {
@@ -44,10 +45,12 @@ let handleRequest = async function (request, env) {
 	let targetKey = rscString.substring(5);
 	let data = await getJson(targetKey, env);
 	if (data) {
-		return new Response(emptyBuffer, {
-			status: 302,
+		let newJsonData = await fetchJson(`https://${data[0]}/.well-known/webfinger?resource=acct:${data[1]}@${data[0]}`);
+		newJsonData["subject"] = rscString;
+		return new Response(JSON.stringify(newJsonData), {
+			status: 200,
 			headers: {
-				"Location": `https://${data[0]}/.well-known/webfinger?resource=acct:${data[1]}@${data[0]}`
+				"Content-Type": "application/json"
 			}
 		});
 	} else {
@@ -57,12 +60,22 @@ let handleRequest = async function (request, env) {
 	};
 };
 
+let responseWrapper = async (req, env) => {
+	try {
+		return await handleRequest(req, env);
+	} catch (err) {
+		return new Response(`${err.stack}`, {
+			status: 500
+		});
+	};
+};
+
 addEventListener("fetch", (event, env) => {
-	event.respondWith(handleRequest(event.request, env));
+	event.respondWith(responseWrapper(event.request, self));
 });
 
 if (self.Deno) {
 	Deno.serve((req) => {
-		return handleRequest(req, Deno.env.toObject());
+		return responseWrapper(req, Deno.env.toObject());
 	});
 };
